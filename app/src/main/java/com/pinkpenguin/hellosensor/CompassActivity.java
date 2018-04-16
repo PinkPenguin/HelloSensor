@@ -12,6 +12,7 @@ import android.os.Vibrator;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -32,6 +33,8 @@ public class CompassActivity extends AppCompatActivity implements SensorEventLis
     private boolean lastMagnetometerSet = false;
     static final float ALPHA = 0.25f;
 
+    float[] prevRotationMatrix = new float[9];
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,10 +53,11 @@ public class CompassActivity extends AppCompatActivity implements SensorEventLis
     public void onSensorChanged(SensorEvent event) {
         if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR){
             SensorManager.getRotationMatrixFromVector(rotationMatrix, event.values);
-            //Log.d("TEST", rotationMatrix[0] + " " + rotationMatrix[1] + " " + rotationMatrix[2]);
-            rotationMatrix = lowPassFilter(event.values.clone(), rotationMatrix);
-            //Log.d("TEST", rotationMatrix[0] + " " + rotationMatrix[1] + " " + rotationMatrix[2]);
+
+            rotationMatrix = lowPassFilter(prevRotationMatrix, rotationMatrix);
             azimuth = (int) (Math.toDegrees(SensorManager.getOrientation(rotationMatrix, orientation)[0]) + 360) % 360;
+
+            prevRotationMatrix = rotationMatrix;
         }
         if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
             System.arraycopy(event.values, 0, lastAccelerometer, 0, event.values.length);
